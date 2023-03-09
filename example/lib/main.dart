@@ -14,6 +14,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final picker = ImagePicker();
   String videoFile = '';
+  String keyPhotoFile = '';
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +33,8 @@ class _MyAppState extends State<MyApp> {
             ElevatedButton(
               child: Text('Select local video'),
               onPressed: () async {
-                final pickedFile = await picker.getVideo(source: ImageSource.gallery);
+                final pickedFile =
+                    await picker.getVideo(source: ImageSource.gallery);
                 if (pickedFile != null) {
                   setState(() {
                     videoFile = pickedFile.path;
@@ -40,9 +42,21 @@ class _MyAppState extends State<MyApp> {
                 }
               },
             ),
+            ElevatedButton(
+              child: Text('Select local key photo'),
+              onPressed: () async {
+                final pickedFile =
+                    await picker.getImage(source: ImageSource.gallery);
+                if (pickedFile != null) {
+                  setState(() {
+                    keyPhotoFile = pickedFile.path;
+                  });
+                }
+              },
+            ),
             Text('path: $videoFile'),
             const SizedBox(height: 10),
-            GenFromLocalPathButton(videoFile),
+            GenFromLocalPathButton(videoFile, keyPhotoFile),
           ],
         )),
       ),
@@ -57,7 +71,8 @@ class GenFromURLButton extends StatelessWidget {
       child: Text('generate from url'),
       onPressed: () {
         LivePhotos.generate(
-          videoURL: "https://img.gifmagazine.net/gifmagazine/images/3870471/original.mp4",
+          videoURL:
+              "https://img.gifmagazine.net/gifmagazine/images/3870471/original.mp4",
         ).then(
           (value) {
             if (value) {
@@ -69,7 +84,8 @@ class GenFromURLButton extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),
-                    content: Text('You can set the downloaded gif in [Settings] > [Wallpaper].'),
+                    content: Text(
+                        'You can set the downloaded gif in [Settings] > [Wallpaper].'),
                     actions: <Widget>[
                       TextButton(
                         child: Text('Cancel'),
@@ -96,9 +112,10 @@ class GenFromURLButton extends StatelessWidget {
 }
 
 class GenFromLocalPathButton extends StatelessWidget {
-  const GenFromLocalPathButton(this.path);
+  const GenFromLocalPathButton(this.path, this.keyPhoto);
 
   final String path;
+  final String keyPhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -109,8 +126,9 @@ class GenFromLocalPathButton extends StatelessWidget {
           return;
         }
         LivePhotos.generate(
-          localPath: path,
-        ).then(
+                localPath: path,
+                localKeyPhoto: keyPhoto == '' ? null : keyPhoto)
+            .then(
           (value) {
             if (value) {
               print("Success");
@@ -121,7 +139,8 @@ class GenFromLocalPathButton extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),
-                    content: Text('You can set the downloaded gif in [Settings] > [Wallpaper].'),
+                    content: Text(
+                        'You can set the downloaded gif in [Settings] > [Wallpaper].'),
                     actions: <Widget>[
                       TextButton(
                         child: Text('Cancel'),

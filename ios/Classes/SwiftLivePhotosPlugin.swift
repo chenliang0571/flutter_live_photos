@@ -30,10 +30,11 @@ public class SwiftLivePhotosPlugin: NSObject, FlutterPlugin {
                 result(false)
                 return
             }
+            let localKeyPhoto = args["localKeyPhoto"] as? String
             let livePhotoClient = LivePhotoClient(callback: {() in
                 result(true)
             })
-            livePhotoClient.runLivePhotoConvertionFromLocalPath(rawURL: localPath)
+            livePhotoClient.runLivePhotoConvertionFromLocalPath(rawURL: localPath, rawKeyPhotoUrl: localKeyPhoto)
         case "openSettings":
             if let url = URL(string: UIApplication.openSettingsURLString), UIApplication.shared.canOpenURL(url) {
                 if #available(iOS 10.0, *) {
@@ -87,7 +88,7 @@ class LivePhotoClient {
     }
 
     // LivePhoto変換エントリポイント
-    public func runLivePhotoConvertionFromLocalPath(rawURL: String) {
+    public func runLivePhotoConvertionFromLocalPath(rawURL: String, rawKeyPhotoUrl: String?) {
         if let localPath = URL(string: rawURL) {
             let photos = PHPhotoLibrary.authorizationStatus()
             print("Init files")
@@ -96,6 +97,10 @@ class LivePhotoClient {
             self.deleteFile(url: pngPath)
             self.deleteFile(url: outputPath)
             self.copy(localPath, toPathName: outputPath)
+            if (rawKeyPhotoUrl != nil) {
+                let localKeyPhotoPath = URL(string: rawKeyPhotoUrl!)
+                self.copy(localKeyPhotoPath!, toPathName: pngPath)
+            }
             if photos == .notDetermined {
                 PHPhotoLibrary.requestAuthorization({status in
                     if status == .authorized{
@@ -180,10 +185,11 @@ class LivePhotoClient {
     
     // ビデオからサムネイルpngを生成する
     private func generateThumbnail(movURL: URL?) {
+        let filePath = self.filePath(forKey: STILL_KEY)
+        if self.existFile(url: filePath!) { return }
         guard let movURL = movURL else { return }
         let asset = AVURLAsset(url: movURL, options: nil)
         let imgGenerator = AVAssetImageGenerator(asset: asset)
-        let filePath = self.filePath(forKey: STILL_KEY)
         if let cgImage = try? imgGenerator.copyCGImage(at: CMTimeMake(value: 0, timescale: 1), actualTime: nil) {
             let pngImage = UIImage(cgImage: cgImage)
             if let pngRep = pngImage.pngData() {
@@ -249,6 +255,10 @@ class LivePhotoClient {
                 print("Failed to delete file")
             }
         }
+    }
+
+    private func existFile(url: URL) -> Bool {
+        return FileManager.default.fileExists(atPath: url.path);
     }
 }
 

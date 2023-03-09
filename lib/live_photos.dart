@@ -8,11 +8,10 @@ class LivePhotos {
   static Future<bool> generate({
     String? videoURL,
     String? localPath,
+    String? localKeyPhoto,
   }) async {
-    assert(videoURL != null || localPath != null,
-        'Either videoURL or localPath must be set.');
-    assert(videoURL == null || localPath == null,
-        'Either videoURL or localPath is only configurable.');
+    assert(videoURL != null || localPath != null, 'Either videoURL or localPath must be set.');
+    assert(videoURL == null || localPath == null, 'Either videoURL or localPath is only configurable.');
     if (videoURL != null) {
       final bool status = await _channel.invokeMethod(
         'generateFromURL',
@@ -27,6 +26,7 @@ class LivePhotos {
           'generateFromLocalPath',
           <String, dynamic>{
             "localPath": localPath,
+            "localKeyPhoto": localKeyPhoto,
           },
         );
         return status;
